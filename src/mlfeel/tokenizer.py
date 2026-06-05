@@ -38,3 +38,19 @@ class BaseTokenizer:
         cleaned = re.sub(r"[^a-z0-9 ]+", " ", cleaned)
         cleaned = " ".join(cleaned.split())
         return cleaned.strip()
+
+    def tokenize_text(self, text: str) -> list[str]:
+        """
+        Given a piece of text, return a list of words processed.
+        Parameters
+        ----------
+        text : str
+            Raw input string.
+
+        Returns
+        -------
+        str
+            Normalised list of string.
+        """
+        preprocessed = self.preprocess_text(text)
+        return preprocessed.split(sep=" ")
