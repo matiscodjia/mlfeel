@@ -10,3 +10,9 @@ dependencies = [
     "pandas>=3.0.3",
     "typing-extensions>=4.15.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "ruff>=0.15.16",
+]
