@@ -39,4 +39,4 @@ def test_vectorizer_key_error_handling(
 ):
     words = ["apple", "unknown"]
     with pytest.raises(KeyError):
-        vectorizer.vectorize(words, populated_indexer.word_to_index)
+        _ = vectorizer.vectorize(words, populated_indexer.word_to_index)
