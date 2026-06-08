@@ -18,6 +18,10 @@ def test_html_mixed_punctuation():
     )
 
 
+def test_empty_string():
+    assert my_tokenizer.tokenize_text("") == []
+
+
 def test_html_punctuation_to_list():
     assert my_tokenizer.tokenize_text("Hello,   World! <br/>") == ["hello", "world"]
 

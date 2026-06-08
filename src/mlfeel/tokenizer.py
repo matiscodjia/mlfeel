@@ -53,4 +53,6 @@ class BaseTokenizer:
             Normalised list of string.
         """
         preprocessed = self.preprocess_text(text)
+        if preprocessed == "":
+            return []
         return preprocessed.split(sep=" ")
