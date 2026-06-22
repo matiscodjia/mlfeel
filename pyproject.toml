@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "ipython>=9.14.1",
     "matplotlib>=3.10.9",
     "numpy>=2.4.6",
     "pandas>=3.0.3",
@@ -18,4 +19,8 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=9.0.3",
     "ruff>=0.15.16",
+]
+[tool.pytest.ini_options]
+markers = [
+    "model: Tests unitaires dédiés à la convergence et à la géométrie du graphe de calcul."
 ]
