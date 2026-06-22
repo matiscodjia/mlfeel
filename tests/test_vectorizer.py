@@ -1,42 +1,51 @@
+import numpy as np
 import pytest
 
 from mlfeel.tokenizer import BaseTokenizer
-from mlfeel.vectorizer import Vectorizer  # À adapter selon ton chemin d'import
+from mlfeel.vectorizer import TF_IDF_Vectorizer
 from mlfeel.vocabulary import VocabIndexer
 
 
-@pytest.fixture
-def vectorizer() -> Vectorizer:
-    return Vectorizer()
-
-
-@pytest.fixture
-def populated_indexer() -> VocabIndexer:
+@pytest.mark.model
+def test_tfidf_vectorizer_pipeline() -> None:
+    # 1. Initialisation des composants
     tokenizer = BaseTokenizer()
-    indexer = VocabIndexer(tokenizer)
-    indexer.indexing("apple banana cherry")
-    return indexer
+    vectorizer = (
+        TF_IDF_Vectorizer()
+    )  # En supposant que vous passez l'indexer au constructeur
 
+    # Corpus d'entraînement (N = 2 documents)
+    train_corpus = ["Le film est excellent.", "Un navet complet, le pire film."]
 
-def test_vectorizer_basic_mapping(
-    vectorizer: Vectorizer, populated_indexer: VocabIndexer
-):
-    words = ["apple", "cherry"]
-    vectors = vectorizer.vectorize(words, populated_indexer.word_to_index)
+    # 2. Phase d'apprentissage (Fit)
+    vectorizer.fit(train_corpus)
 
-    assert vectors == [0, 2]
-    assert vectorizer.dim == 3
+    # Assertions sur le vocabulaire
+    assert vectorizer.dim > 0
+    assert "film" in vectorizer.word_to_index
+    assert "excellent" in vectorizer.word_to_index
 
+    # 3. Phase de transformation (Transform)
+    train_matrix = vectorizer.transform(train_corpus)
 
-def test_vectorizer_empty_list(vectorizer: Vectorizer, populated_indexer: VocabIndexer):
-    vectors = vectorizer.vectorize([], populated_indexer.word_to_index)
-    assert vectors == []
-    assert vectorizer.dim == 3
+    # Invariant géométrique : la forme doit être (N_documents, V_vocabulaire)
+    assert train_matrix.shape == (2, vectorizer.dim)
 
+    # 4. Test de robustesse face à l'inférence (Mots inconnus en production)
+    # "incroyable" et "chef d'oeuvre" n'existent pas dans le train_corpus
+    prod_corpus = ["Un film incroyable, un chef d oeuvre."]
 
-def test_vectorizer_key_error_handling(
-    vectorizer: Vectorizer, populated_indexer: VocabIndexer
-):
-    words = ["apple", "unknown"]
-    with pytest.raises(KeyError):
-        _ = vectorizer.vectorize(words, populated_indexer.word_to_index)
+    # Cette ligne ne doit pas lever de KeyError
+    prod_matrix = vectorizer.transform(prod_corpus)
+
+    # Invariant de production : la forme doit être (1, V_vocabulaire)
+    assert prod_matrix.shape == (1, vectorizer.dim)
+
+    # 5. Invariant mathématique : "le" est dans les deux documents, "excellent" dans un seul.
+    # L'IDF de "excellent" doit donc être strictement supérieur à l'IDF de "le"
+    idx_le = vectorizer.word_to_index["le"]
+    idx_excellent = vectorizer.word_to_index["excellent"]
+
+    assert (
+        vectorizer.idf[idx_excellent] > vectorizer.idf[idx_le]
+    ), "L'IDF n'écrase pas les mots fréquents."
