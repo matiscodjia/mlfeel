@@ -15,7 +15,7 @@ def indexer(tokenizer: BaseTokenizer) -> VocabIndexer:
 
 
 def test_vocab_indexer_indexing(indexer: VocabIndexer):
-    corpus = "Hello world! Hello NLP."
+    corpus = ["Hello world! Hello NLP."]
     indexer.indexing(corpus)
 
     assert len(indexer.index_to_word) == 3
@@ -25,7 +25,7 @@ def test_vocab_indexer_indexing(indexer: VocabIndexer):
 
 
 def test_vocab_indexer_id_mapping(indexer: VocabIndexer):
-    corpus = "apple banana apple"
+    corpus = ["apple banana apple"]
     indexer.indexing(corpus)
 
     words = list(indexer.index_to_word.values())
@@ -35,22 +35,22 @@ def test_vocab_indexer_id_mapping(indexer: VocabIndexer):
 
 
 def test_vocab_indexer_empty_corpus(indexer: VocabIndexer):
-    indexer.indexing("")
+    indexer.indexing([""])
     assert indexer.index_to_word == {}
 
 
 def test_vocab_indexer_persistence(indexer: VocabIndexer):
-    indexer.indexing("cat dog")
+    indexer.indexing(["cat dog"])
     assert len(indexer.index_to_word) == 2
 
-    indexer.indexing("bird")
+    indexer.indexing(["bird"])
     assert len(indexer.index_to_word) == 1
     assert 0 in indexer.index_to_word
     assert indexer.index_to_word[0] == "bird"
 
 
 def test_vocab_indexer_bidirectional_mapping(indexer: VocabIndexer):
-    corpus = "apple banana"
+    corpus = ["apple banana"]
     indexer.indexing(corpus)
 
     assert len(indexer.word_to_index) == 2
@@ -62,8 +62,8 @@ def test_vocab_indexer_bidirectional_mapping(indexer: VocabIndexer):
 
 
 def test_vocab_indexer_word_to_index_persistence(indexer: VocabIndexer):
-    indexer.indexing("cat dog")
-    indexer.indexing("bird")
+    indexer.indexing(["cat dog"])
+    indexer.indexing(["bird"])
 
     assert "bird" in indexer.word_to_index
     assert indexer.word_to_index["bird"] == 0
