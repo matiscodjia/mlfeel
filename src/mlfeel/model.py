@@ -5,6 +5,9 @@ from typing import cast
 import numpy as np
 from typing_extensions import override
 
+from mlfeel.losses.loss import Loss
+from mlfeel.optimizers.adam import Adam
+
 
 class Module(ABC):
     @abstractmethod
@@ -63,44 +66,6 @@ class Linear(Module):
         ]
 
 
-class Activation(Module, ABC):
-    @abstractmethod
-    def _func(self, X: np.ndarray) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def _deriv(self, X: np.ndarray) -> np.ndarray:
-        pass
-
-    @override
-    def backward(self, grad_out: np.ndarray) -> np.ndarray:
-        return grad_out * self._deriv(self.entry)
-
-    @override
-    def forward(self, X: np.ndarray) -> np.ndarray:
-        self.entry: np.ndarray = X
-        return self._func(X)
-
-    @override
-    def parameters(self) -> list[dict[str, np.ndarray]]:
-        return []
-
-
-class LeakyReLU(Activation):
-    def __init__(self, alpha: float = 0.01):
-        self.alpha: float = alpha
-
-    @override
-    def _func(self, X: np.ndarray) -> np.ndarray:
-        # np.where(condition, valeur_si_vrai, valeur_si_faux)
-        return np.where(X > 0, X, self.alpha * X)
-
-    @override
-    def _deriv(self, X: np.ndarray) -> np.ndarray:
-        # Renvoie 1.0 là où X > 0, et alpha partout ailleurs
-        return np.where(X > 0, 1.0, self.alpha).astype(X.dtype)
-
-
 class Sequential(Module):
     layers: list[Module]
 
@@ -129,82 +94,6 @@ class Sequential(Module):
                 layer.parameters()
             )  # chaque couche renvoie une liste de dictionnaires
         return params
-
-
-class Loss(ABC):
-    @abstractmethod
-    def _func(self, pred: np.ndarray, target: np.ndarray) -> float:
-        pass
-
-    @abstractmethod
-    def _deriv(self, pred: np.ndarray, target: np.ndarray) -> np.ndarray:
-        pass
-
-    def backward(self) -> np.ndarray:
-        # Grad_out = ∂L/∂L = 1
-        return self._deriv(self.pred, self.target)
-
-    def forward(self, pred: np.ndarray, target: np.ndarray) -> float:
-        self.pred: np.ndarray = pred
-        self.target: np.ndarray = target
-        return self._func(pred, target)
-
-
-class MSE(Loss):
-    @override
-    def _func(self, pred: np.ndarray, target: np.ndarray) -> float:
-        N = cast(float, pred.shape[0])
-        error_vector = target - pred
-        return ((np.linalg.norm(error_vector) ** 2) * 0.5).item() / N
-
-    @override
-    def _deriv(self, pred: np.ndarray, target: np.ndarray) -> np.ndarray:
-        N = cast(float, pred.shape[0])
-        return (pred - target) / N
-
-
-class Optimzer(ABC):
-
-    @abstractmethod
-    def step(self, params: list[dict[str, np.ndarray]]):
-        pass
-
-
-class Adam(Optimzer):
-    def __init__(self, learning_rate: float, beta_momentum: float, beta_rms: float):
-        self.t: int = 0
-        self.beta_1: float = beta_momentum
-        self.beta_2: float = beta_rms
-        self.lr: float = learning_rate
-        self.state: dict[int, dict[str, np.ndarray]] = {}
-
-    @override
-    def step(self, params: list[dict[str, np.ndarray]]):
-        EPS = 10e-8
-        self.t += 1
-        for param_dict in params:
-            parameter = param_dict["param"]
-            param_grad = param_dict["grad"]
-
-            pid = id(parameter)
-            if pid not in self.state:
-                self.state[pid] = {
-                    "m": np.zeros_like(parameter),
-                    "v": np.zeros_like(parameter),
-                }
-            m = self.state[pid]["m"]
-            v = self.state[pid]["v"]
-
-            m_current = self.beta_1 * m + (1 - self.beta_1) * param_grad
-            v_current = self.beta_2 * v + (1 - self.beta_2) * (param_grad**2)
-            m_current_corrected = m_current / (1 - self.beta_1**self.t)
-            v_current_corrected = v_current / (1 - self.beta_2**self.t)
-            self.state[pid]["m"] = m_current
-            self.state[pid]["v"] = v_current
-
-            parameter -= (
-                self.lr * m_current_corrected / (np.sqrt(v_current_corrected) + EPS)
-            )
 
 
 logger = logging.getLogger(__name__)

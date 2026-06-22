@@ -3,7 +3,10 @@ import logging
 import numpy as np
 import pytest
 
-from mlfeel.model import MSE, Adam, LeakyReLU, Linear, Sequential, train_model
+from mlfeel.activations.activation import LeakyReLU
+from mlfeel.losses.mse import MSE
+from mlfeel.model import Linear, Sequential, train_model
+from mlfeel.optimizers.adam import Adam
 
 logger = logging.getLogger(__name__)
 
