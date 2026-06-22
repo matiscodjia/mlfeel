@@ -1,15 +1,11 @@
-import numpy as np
 import pytest
 
-from mlfeel.tokenizer import BaseTokenizer
 from mlfeel.vectorizer import TF_IDF_Vectorizer
-from mlfeel.vocabulary import VocabIndexer
 
 
 @pytest.mark.model
 def test_tfidf_vectorizer_pipeline() -> None:
     # 1. Initialisation des composants
-    tokenizer = BaseTokenizer()
     vectorizer = (
         TF_IDF_Vectorizer()
     )  # En supposant que vous passez l'indexer au constructeur
